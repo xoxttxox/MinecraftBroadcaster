@@ -113,25 +113,6 @@ src/
   storage/    Cache, Sessions, SQLite-History
 ```
 
-## GitHub Release bauen
-
-```bash
-npm install
-npm run typecheck
-npm run build
-```
-
-Danach kannst du das Repository committen und auf GitHub pushen:
-
-```bash
-git init
-git add .
-git commit -m "chore: prepare project for GitHub release"
-git branch -M main
-git remote add origin https://github.com/DEINNAME/MinecraftBroadcaster.git
-git push -u origin main
-```
-
 ## Sicherheit
 
 Nicht hochladen:
