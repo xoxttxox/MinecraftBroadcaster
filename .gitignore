@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Runtime data
+cache/
+logs/
+*.log
+*.log.*
+player_history.db
+sessions.json
+auth.json
+
+# Local config / secrets
+config.yml
+config.local.yml
+.env
+.env.*
+!.env.example
+
+# Package managers
+.pnpm-store/
+.yarn/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/

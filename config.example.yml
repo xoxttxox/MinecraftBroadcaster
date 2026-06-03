@@ -1,0 +1,156 @@
+# =============================================================================
+# MCXboxBroadcast — Standalone (Node.js / TypeScript) — BEISPIEL-KONFIGURATION
+# =============================================================================
+#
+# Einrichtung:
+#   1. Diese Datei nach config.yml kopieren (im gleichen Ordner wie package.json /
+#      dem Arbeitsverzeichnis von `npm run start` / `node dist/main.js`).
+#   2. Werte unten anpassen — insbesondere session.sessionInfo (IP/Port),
+#      bedrockVersion und auth.
+#   3. Ohne config.yml legt das Programm beim ersten Start eine Standard-config.yml
+#      an und beendet sich mit Hinweis zum Bearbeiten (danach neu starten).
+#
+# Befehle / Start (Node):
+#   npm ci              Abhängigkeiten installieren
+#   npm run build       dist/main.js erzeugen (esbuild)
+#   npm start           Entwicklung: tsx src/main.ts
+#   npm run start:js    Produktion: node dist/main.js
+#   npm run typecheck   Nur TypeScript prüfen (ohne Ausgabe)
+#
+# Ordner (automatisch):
+#   cache/   auth.json (Microsoft/Xbox-Tokens), sessions.json (Laufzeit),
+#            player_history.db (Freunde / Friend-Expiry)
+#   logs/    latest.log + archivierte *.log.gz (wie Java log4j2)
+#
+# Konsole (Java vs. Node):
+#   Die Gradle/Java-Standalone-Edition bietet eine interaktive Konsole, z. B.:
+#     exit | stop     — Beenden
+#     restart         — Neustart der Session
+#     dumpsession     — Session-Antworten als JSON ablegen
+#     accounts list | accounts add <id> | accounts remove <id>
+#     version         — Versionszeile
+#     help            — Hilfe
+#   Diese Node-Standalone-Version hat keine eingebaute REPL-Konsole — Steuerung
+#   erfolgt über config.yml, Prozess-Signale (SIGINT/SIGTERM) und Logs.
+#
+# =============================================================================
+
+# Minecraft Bedrock-Version für Auth & Ping (muss von bedrock-protocol unterstützt sein).
+bedrockVersion: "1.26.20"
+
+# -----------------------------------------------------------------------------
+# auth — Microsoft Device-Code-Anmeldung (prismarine-auth)
+# -----------------------------------------------------------------------------
+# deviceProfile: nintendo | android | ios | playstation | windows
+#   windows wird intern wie android behandelt (kein echtes Windows-GDK-Paar).
+# microsoftAuthFlow: live | sisu | auto (optional)
+#   auto: Nintendo → live, alle anderen Profile → sisu.
+#   Bei 400 auf Title-Token: profile wechseln oder microsoftAuthFlow: sisu setzen,
+#   dann cache/auth.json löschen und neu anmelden.
+auth:
+  deviceProfile: nintendo
+  # microsoftAuthFlow: auto
+
+# -----------------------------------------------------------------------------
+# Allgemein
+# -----------------------------------------------------------------------------
+debugMode: false
+# true = unterdrückt das periodische Log „Updated session!“ (Debug sieht es ggf. noch).
+suppressSessionUpdateMessage: false
+
+configVersion: 2
+
+# -----------------------------------------------------------------------------
+# session — Xbox Session Directory / Bedrock-Ziel nach NetherNet-Transfer
+# -----------------------------------------------------------------------------
+session:
+  updateInterval: 30
+  # Sekunden zwischen Session-Updates (Ping + PUT).
+
+  fullRefreshInterval: 0
+  # Sekunden bis zu einem kompletten Full-Refresh der advertised Xbox-Session.
+  # 0 = deaktiviert. Empfohlen, weil RTA jetzt erst per Soft-Reconnect repariert wird.
+  # Optional als Sicherheitsnetz: 7200 = alle 2 Stunden, 14400 = alle 4 Stunden.
+
+  rtaReconnectAttempts: 3
+  # Wenn RTA/WebSocket abbricht: erst so oft soft reconnecten, ohne neue Xbox-Session.
+
+  rtaReconnectDelay: 3
+  # Sekunden Pause zwischen Soft-Reconnect-Versuchen.
+
+  queryServer: true
+  # true = Versucht den Bedrock-Server zu pingen (MOTD, Spielerzahl, Protokoll).
+
+  webQueryFallback: false
+  # Zusätzlicher Web-Query-Fallback (falls konfiguriert).
+
+  configFallback: false
+  # Bei Ping-Fehler: sessionInfo aus der YAML nutzen (statt Abbruch).
+
+  # Session-Directory-Felder (Java-Parität):
+  # transportLayer: 2
+  # broadcastSetting: 3
+
+  # true (Standard): JsonRpc (7) + WebRTC-Signaling (3) — empfohlen für viele Clients.
+  extraWebRtcSignalingConnection: true
+
+  # Test: nur eine SupportedConnections-Zeile (WebRTC ohne JsonRpc-Zeile).
+  # onlyWebRtcSignalingConnection: false
+
+  sessionInfo:
+    # Anzeige in der Xbox-/Minecraft-„Welten“-Liste (nicht direkt vom Server gelesen).
+    hostName: "Mein Server"
+    worldName: "Lobby"
+    worldType: "Survival"
+    players: 0
+    maxPlayers: 20
+    # IP/Port des **echten** Bedrock-/Geyser-Servers — Ziel nach Transfer.
+    ip: "127.0.0.1"
+    port: 19132
+
+# -----------------------------------------------------------------------------
+# friendSync — Freundesliste / Einladungen / „Expiry“
+# -----------------------------------------------------------------------------
+friendSync:
+  updateInterval: 60
+
+  # Automatisch Freunde zurückfolgen / entfolgen (Xbox Social Graph).
+  autoFollow: true
+  autoUnfollow: true
+
+  # Session-Einladung nach neuem Freund (Standard: true).
+  initialInvite: true
+
+  # Wenn autoFollow false: für eingehende Anfragen trotzdem API-Akzeptanz nutzen:
+  # autoAcceptIncomingFriendRequests: true
+
+  expiry:
+    enabled: true
+    days: 15
+    check: 1800
+
+# -----------------------------------------------------------------------------
+# notifications — Discord (o. ä.) Webhooks
+# -----------------------------------------------------------------------------
+notifications:
+  enabled: false
+
+  # Discord Incoming Webhook URL (Beispiel — eigene URL eintragen):
+  webhookUrl: "https://discord.com/api/webhooks/PASTE_WEBHOOK_ID/PASTE_WEBHOOK_TOKEN"
+
+  discordEmbeds: true
+  discordWebhookUsername: "MCXboxBroadcast"
+  embedFooterText: "MCXboxBroadcast"
+
+  # Platzhalter: zwei %s = Gamertag, XUID (Expiry: ein %s = XUID).
+  friendAddedMessage: "%s (%s) was added as a friend."
+  friendRemovedMessage: "%s (%s) was removed from friends."
+  friendRequestAcceptedMessage: "Accepted friend request from %s (%s)."
+  friendExpiryRemovalMessage: "%s was removed from friends (inactive / expiry)."
+  friendRestrictionMessage: "%s (%s) has restrictions in place that prevent them from being friends with our account."
+
+  sessionExpiredMessage: |
+    @here Xbox Session expired, sign in again to update it.
+
+    Use the following link to sign in: %s
+    Enter the code: %s
