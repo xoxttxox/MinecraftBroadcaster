@@ -1,13 +1,15 @@
 # Security Policy
 
-Bitte veröffentliche keine sensiblen Daten in Issues oder Pull Requests.
+Please do not publish sensitive information in Issues or Pull Requests.
 
-Dazu gehören insbesondere:
+This includes:
 
-- Microsoft-/Xbox-Tokens
-- `cache/auth.json`
-- private `config.yml`
-- Discord-Webhook-URLs
-- Server-IP-Adressen, wenn sie nicht öffentlich sein sollen
+* Microsoft/Xbox authentication tokens
+* `cache/auth.json`
+* Private `config.yml` files
+* Discord webhook URLs
+* Server IP addresses that are not intended to be public
 
-Bei einem Sicherheitsproblem bitte erst privat melden und keine funktionierenden Exploit-Details öffentlich posten.
+If you discover a security vulnerability, please report it privately before publishing any details.
+
+Do not publicly share working exploits or attack methods until the issue has been resolved.
