@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0
+## 1.0.0
 
 - Initial GitHub-ready project structure
 - TypeScript source layout
