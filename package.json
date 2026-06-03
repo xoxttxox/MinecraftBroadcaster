@@ -1,6 +1,6 @@
 {
   "name": "minecraft-broadcaster",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Standalone Minecraft Bedrock / Xbox Broadcaster in Node.js and TypeScript",
   "main": "dist/main.js",
   "scripts": {
