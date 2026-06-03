@@ -1,26 +1,27 @@
 # MinecraftBroadcaster
 
-Standalone Minecraft Bedrock / Xbox Broadcaster in **Node.js + TypeScript**.  
-Das Projekt erstellt und aktualisiert eine Xbox-/Minecraft-Session, synchronisiert Freunde und leitet Spieler per NetherNet/WebRTC auf deinen echten Bedrock- oder Geyser-Server weiter.
+Standalone Minecraft Bedrock / Xbox Broadcaster built with **Node.js + TypeScript**.
+
+This project creates and maintains Xbox Live / Minecraft sessions, synchronizes friends, and redirects players through NetherNet/WebRTC to your actual Bedrock or Geyser server.
 
 ## Features
 
-- Microsoft/Xbox Device-Code-Login über `prismarine-auth`
-- Xbox Session Directory Updates
-- RTA/WebSocket Reconnect-Logik
-- NetherNet / WebRTC Signaling
-- Bedrock-Server-Ping für MOTD, Spielerzahl und Protokoll
-- Freundes-Sync mit Auto-Follow / Auto-Unfollow
-- optionaler Discord-Webhook für Benachrichtigungen
-- lokale Logs und Cache-Dateien
-- TypeScript-Build über `esbuild`
+* Microsoft/Xbox Device Code Authentication using `prismarine-auth`
+* Xbox Session Directory Updates
+* RTA/WebSocket Reconnect Logic
+* NetherNet / WebRTC Signaling
+* Bedrock Server Ping for MOTD, Player Count and Protocol Version
+* Friend Synchronization with Auto Follow / Auto Unfollow
+* Optional Discord Webhook Notifications
+* Local Logs and Cache Files
+* TypeScript Build System powered by `esbuild`
 
-## Voraussetzungen
+## Requirements
 
-- Node.js **20 oder neuer**
-- npm
-- ein erreichbarer Minecraft Bedrock- oder Geyser-Server
-- ein Microsoft-/Xbox-Konto für den Broadcaster
+* Node.js **20 or newer**
+* npm
+* A reachable Minecraft Bedrock or Geyser server
+* A Microsoft/Xbox account for broadcasting
 
 ## Installation
 
@@ -28,44 +29,44 @@ Das Projekt erstellt und aktualisiert eine Xbox-/Minecraft-Session, synchronisie
 npm install
 ```
 
-## Konfiguration
+## Configuration
 
-Kopiere die Beispielkonfiguration:
+Copy the example configuration:
 
 ```bash
 cp config.example.yml config.yml
 ```
 
-Passe danach mindestens diese Werte in `config.yml` an:
+Then update at least the following values inside `config.yml`:
 
 ```yml
 bedrockVersion: "1.26.20"
 
 session:
   sessionInfo:
-    hostName: "Mein Server"
+    hostName: "My Server"
     worldName: "Lobby"
     ip: "127.0.0.1"
     port: 19132
 ```
 
-Wichtig: `config.yml`, `cache/` und `logs/` werden nicht ins Git-Repository übernommen, weil dort lokale Daten, Tokens oder Secrets liegen können.
+Important: `config.yml`, `cache/`, and `logs/` are excluded from Git because they may contain local data, tokens, or secrets.
 
-## Starten
+## Running
 
-Entwicklungsmodus mit TypeScript direkt:
+Development mode:
 
 ```bash
 npm start
 ```
 
-Produktionsbuild erstellen:
+Create a production build:
 
 ```bash
 npm run build
 ```
 
-Build starten:
+Run the compiled build:
 
 ```bash
 npm run start:js
@@ -73,13 +74,15 @@ npm run start:js
 
 ## Login
 
-Beim ersten Start fordert das Programm dich zur Microsoft Device-Code-Anmeldung auf. Folge dem Link in der Konsole und gib den angezeigten Code ein.
+On first startup, the application will ask you to authenticate using Microsoft's Device Code flow.
 
-Wenn der Login fehlschlägt:
+Follow the link displayed in the console and enter the provided code.
 
-1. Prozess stoppen
-2. `cache/auth.json` löschen oder den kompletten `cache/`-Ordner entfernen
-3. in `config.yml` testweise ändern:
+If authentication fails:
+
+1. Stop the application
+2. Delete `cache/auth.json` or the entire `cache/` directory
+3. Optionally change the following settings in `config.yml`:
 
 ```yml
 auth:
@@ -87,45 +90,45 @@ auth:
   microsoftAuthFlow: sisu
 ```
 
-Danach erneut starten.
+Then start the application again.
 
-## NPM-Scripts
+## NPM Scripts
 
-| Script | Beschreibung |
-| --- | --- |
-| `npm start` | Startet `src/main.ts` mit `tsx` |
-| `npm run build` | Erstellt `dist/main.js` |
-| `npm run start:js` | Startet den gebauten Build |
-| `npm run typecheck` | Prüft TypeScript ohne Build-Ausgabe |
+| Script              | Description                      |
+| ------------------- | -------------------------------- |
+| `npm start`         | Starts `src/main.ts` using `tsx` |
+| `npm run build`     | Creates `dist/main.js`           |
+| `npm run start:js`  | Runs the compiled build          |
+| `npm run typecheck` | Runs TypeScript type checking    |
 
-## Ordnerstruktur
+## Project Structure
 
 ```txt
 src/
-  app/        Haupt-App / Standalone-Runner
-  auth/       Microsoft-/Xbox-Auth
-  config/     YAML-Konfiguration
-  core/       Logger, Konstanten, Pfade
-  network/    RTA, NetherNet, WebRTC, Signaling
-  services/   Ping, Discord, Xbox-Profil, Notifications
-  session/    Xbox-Session Payload / Controller
-  social/     Freundesliste / Friend-Sync
-  storage/    Cache, Sessions, SQLite-History
+  app/        Main application / standalone runner
+  auth/       Microsoft / Xbox authentication
+  config/     YAML configuration
+  core/       Logger, constants and paths
+  network/    RTA, NetherNet, WebRTC and signaling
+  services/   Ping, Discord, Xbox profiles and notifications
+  session/    Xbox session payload and controller
+  social/     Friends list and synchronization
+  storage/    Cache, sessions and SQLite history
 ```
 
-## Sicherheit
+## Security
 
-Nicht hochladen:
+Never upload:
 
-- `config.yml`
-- `.env` Dateien
-- `cache/`
-- `logs/`
-- `auth.json`
-- Datenbanken wie `player_history.db`
+* `config.yml`
+* `.env` files
+* `cache/`
+* `logs/`
+* `auth.json`
+* Databases such as `player_history.db`
 
-Diese Dateien können Tokens, Accountdaten oder private Serverdaten enthalten.
+These files may contain tokens, account information or private server data.
 
-## Lizenz
+## License
 
-Dieses Projekt ist unter der **GPL-3.0** lizenziert. Siehe [`LICENSE`](LICENSE).
+This project is licensed under the **GPL-3.0 License**. See the `LICENSE` file for details.
