@@ -1,8 +1,8 @@
 # Contributing
 
-Danke, dass du helfen möchtest.
+Thank you for your interest in contributing to MinecraftBroadcaster.
 
-## Entwicklung
+## Development
 
 ```bash
 npm install
@@ -10,11 +10,12 @@ npm run typecheck
 npm run build
 ```
 
-Bitte keine lokalen Konfigurationen, Tokens, Logs oder Cache-Dateien committen.
+Please do not commit local configuration files, authentication tokens, logs, cache files, or any other sensitive data.
 
 ## Pull Requests
 
-- Beschreibe kurz, was geändert wurde.
-- Führe `npm run typecheck` aus.
-- Führe `npm run build` aus.
-- Halte Änderungen möglichst fokussiert.
+* Provide a clear description of your changes.
+* Run `npm run typecheck`.
+* Run `npm run build`.
+* Keep changes focused and easy to review.
+* Follow the existing code style and project structure.
