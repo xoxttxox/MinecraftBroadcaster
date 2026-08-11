@@ -16,6 +16,8 @@ import { fetchGamertagForXuid } from './xboxProfile'
 /** Gleiche Discord-Zeile wie {@link notifyFriendRemoved}, aber mit Abstand — verhindert Doppelpost (RTA + Poll, mehrere RTA). */
 const remoteRemovalDiscordAt = new Map<string, number>()
 const REMOTE_REMOVAL_DEDUPE_MS = 120_000
+/** Verhindert unbegrenztes Wachstum der Dedupe-Map über lange Laufzeiten. */
+const REMOTE_REMOVAL_MAP_MAX_SIZE = 500
 
 function shouldSkipRemoteRemovalDiscord(xuid: string): boolean {
   const t = remoteRemovalDiscordAt.get(xuid)
@@ -24,6 +26,12 @@ function shouldSkipRemoteRemovalDiscord(xuid: string): boolean {
 
 function recordRemoteRemovalDiscord(xuid: string): void {
   remoteRemovalDiscordAt.set(xuid, Date.now())
+  if (remoteRemovalDiscordAt.size > REMOTE_REMOVAL_MAP_MAX_SIZE) {
+    const cutoff = Date.now() - REMOTE_REMOVAL_DEDUPE_MS
+    for (const [k, t] of remoteRemovalDiscordAt) {
+      if (t < cutoff) remoteRemovalDiscordAt.delete(k)
+    }
+  }
 }
 
 async function postNotification(
@@ -114,13 +122,18 @@ export async function notifyFriendAdded(
   await postNotification(n, log, 'friend-added', text, 'Friend added', EMBED_COLORS.friendAdded)
 }
 
-/** Wenn **dieses** Programm per API einen Freund entfernt (DELETE) — kein Remote-Dedupe. */
+/**
+ * Wenn **dieses** Programm per API einen Freund entfernt (DELETE).
+ * Registriert die xuid im Remote-Dedupe, damit der nächste Poll (der die eigene Entfernung
+ * als "verschwunden" erkennt) nicht dieselbe Nachricht ein zweites Mal per {@link notifyFriendRemovedRemote} sendet.
+ */
 export async function notifyFriendRemoved(
   n: CoreConfigYaml['notifications'],
   log: Logger,
   gamertag: string,
   xuid: string
 ): Promise<void> {
+  recordRemoteRemovalDiscord(xuid)
   if (!n?.enabled || !n.webhookUrl) return
   const text = formatTwoPlaceholders(n.friendRemovedMessage ?? '%s (%s) was removed from friends.', gamertag, xuid)
   await postNotification(n, log, 'friend-removed', text, 'Friend removed', EMBED_COLORS.friendRemoved)
@@ -161,6 +174,7 @@ export async function notifyFriendExpiryRemoval(
   log: Logger,
   xuid: string
 ): Promise<void> {
+  recordRemoteRemovalDiscord(xuid)
   if (!n?.enabled || !n.webhookUrl) return
   const tpl = n.friendExpiryRemovalMessage ?? '%s was removed from friends (inactive / expiry).'
   const text = tpl.replace('%s', xuid)

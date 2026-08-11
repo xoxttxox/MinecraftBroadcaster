@@ -83,6 +83,10 @@ export class FriendSync {
   private lastCache: Person[] = []
   private toAdd = new Map<string, string>()
   private toRemove = new Map<string, string>()
+  /** Zählt aufeinanderfolgende Runden, in denen jemand als "folgt nicht mehr" erkannt wurde — verhindert Entfernen wegen kurzer Xbox-API-Ausrutscher. */
+  private unfollowStrikes = new Map<string, number>()
+  /** Anzahl aufeinanderfolgender Bestätigungen, bevor autoUnfollow tatsächlich entfernt. */
+  private static readonly UNFOLLOW_CONFIRM_ROUNDS = 2
   private processing = false
   private initialInvite = true
   private friendCfg: CoreConfigYaml['friendSync'] | undefined
@@ -290,7 +294,14 @@ export class FriendSync {
         }
 
         if (cfg.autoUnfollow && !person.isFollowingCaller && person.isFollowedByCaller) {
-          this.toRemove.set(person.xuid, tag)
+          const strikes = (this.unfollowStrikes.get(person.xuid) ?? 0) + 1
+          this.unfollowStrikes.set(person.xuid, strikes)
+          if (strikes >= FriendSync.UNFOLLOW_CONFIRM_ROUNDS) {
+            this.toRemove.set(person.xuid, tag)
+          }
+        } else {
+          // Folgt (wieder) — Zähler zurücksetzen, damit ein einmaliger API-Ausrutscher nicht nachwirkt.
+          this.unfollowStrikes.delete(person.xuid)
         }
       }
 
@@ -337,6 +348,7 @@ export class FriendSync {
             await notifyFriendRemoved(this.notifications, this.log, tag, xuid)
           }
           this.history.clear(xuid)
+          this.unfollowStrikes.delete(xuid)
         }
       }
     } finally {
