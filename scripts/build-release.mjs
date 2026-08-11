@@ -4,20 +4,65 @@ import { deflateRawSync } from 'node:zlib';
 
 const root = process.cwd();
 const outputFile = path.join(root, 'build.zip');
+const sourcePackagePath = path.join(root, 'package.json');
+const sourceLockPath = path.join(root, 'package-lock.json');
+
+function readJson(file) {
+  return JSON.parse(fs.readFileSync(file, 'utf8'));
+}
+
+const sourcePackage = readJson(sourcePackagePath);
+
+// Production-only package.json for the distributable archive.
+// Development scripts, devDependencies, source file declarations, etc. stay
+// in the repository and are deliberately not shipped in build.zip.
+const runtimePackage = {
+  name: sourcePackage.name,
+  version: sourcePackage.version,
+  description: sourcePackage.description,
+  main: 'build/main.js',
+  type: sourcePackage.type ?? 'commonjs',
+  engines: sourcePackage.engines,
+  license: sourcePackage.license,
+  scripts: {
+    start: 'node build/main.js',
+  },
+  dependencies: sourcePackage.dependencies ?? {},
+};
+
+// Keep npm ci happy by making the root package metadata in package-lock.json
+// match the generated production package.json. Transitive dev entries may stay
+// in the lockfile; npm ci --omit=dev will not install them.
+const runtimeLock = readJson(sourceLockPath);
+if (runtimeLock.packages?.['']) {
+  const rootLock = runtimeLock.packages[''];
+  rootLock.name = runtimePackage.name;
+  rootLock.version = runtimePackage.version;
+  rootLock.license = runtimePackage.license;
+  rootLock.dependencies = runtimePackage.dependencies;
+  rootLock.engines = runtimePackage.engines;
+  delete rootLock.devDependencies;
+}
 
 const staticFiles = [
   ['build/main.js', 'build/main.js'],
   ['config.example.yml', 'config.example.yml'],
-  ['package.json', 'package.json'],
-  ['package-lock.json', 'package-lock.json'],
   ['README.md', 'README.md'],
   ['LICENSE', 'LICENSE'],
 ];
 
 const generatedFiles = [
-  ['install.bat', '@echo off\r\nsetlocal\r\necho Installing production dependencies...\r\nnpm ci --omit=dev\r\nif errorlevel 1 exit /b %errorlevel%\r\nif not exist config.yml copy /Y config.example.yml config.yml >nul\r\necho.\r\necho Ready. Edit config.yml, then run start.bat\r\n'],
+  ['package.json', `${JSON.stringify(runtimePackage, null, 2)}\n`],
+  ['package-lock.json', `${JSON.stringify(runtimeLock, null, 2)}\n`],
+  [
+    'install.bat',
+    '@echo off\r\nsetlocal\r\necho Installing production dependencies...\r\nnpm ci --omit=dev\r\nif errorlevel 1 exit /b %errorlevel%\r\nif not exist config.yml copy /Y config.example.yml config.yml >nul\r\necho.\r\necho Ready. Edit config.yml, then run start.bat\r\n',
+  ],
   ['start.bat', '@echo off\r\nnode build/main.js\r\n'],
-  ['install.sh', '#!/usr/bin/env sh\nset -eu\necho "Installing production dependencies..."\nnpm ci --omit=dev\nif [ ! -f config.yml ]; then cp config.example.yml config.yml; fi\necho\necho "Ready. Edit config.yml, then run ./start.sh"\n'],
+  [
+    'install.sh',
+    '#!/usr/bin/env sh\nset -eu\necho "Installing production dependencies..."\nnpm ci --omit=dev\nif [ ! -f config.yml ]; then cp config.example.yml config.yml; fi\necho\necho "Ready. Edit config.yml, then run ./start.sh"\n',
+  ],
   ['start.sh', '#!/usr/bin/env sh\nset -eu\nexec node build/main.js\n'],
 ];
 
@@ -52,8 +97,14 @@ function crc32(buffer) {
 
 function dosDateTime(date = new Date()) {
   const year = Math.max(1980, date.getFullYear());
-  const dosTime = (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2);
-  const dosDate = ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+  const dosTime =
+    (date.getHours() << 11) |
+    (date.getMinutes() << 5) |
+    Math.floor(date.getSeconds() / 2);
+  const dosDate =
+    ((year - 1980) << 9) |
+    ((date.getMonth() + 1) << 5) |
+    date.getDate();
   return { dosTime, dosDate };
 }
 
@@ -72,8 +123,8 @@ function createZip(items) {
     const local = Buffer.alloc(30);
     local.writeUInt32LE(0x04034b50, 0);
     local.writeUInt16LE(20, 4);
-    local.writeUInt16LE(0x0800, 6); // UTF-8
-    local.writeUInt16LE(8, 8); // deflate
+    local.writeUInt16LE(0x0800, 6);
+    local.writeUInt16LE(8, 8);
     local.writeUInt16LE(now.dosTime, 10);
     local.writeUInt16LE(now.dosDate, 12);
     local.writeUInt32LE(crc, 14);
@@ -86,7 +137,7 @@ function createZip(items) {
 
     const central = Buffer.alloc(46);
     central.writeUInt32LE(0x02014b50, 0);
-    central.writeUInt16LE(0x0314, 4); // Unix, version 2.0
+    central.writeUInt16LE(0x0314, 4);
     central.writeUInt16LE(20, 6);
     central.writeUInt16LE(0x0800, 8);
     central.writeUInt16LE(8, 10);
@@ -123,10 +174,12 @@ function createZip(items) {
   return Buffer.concat([...localParts, centralDirectory, end]);
 }
 
-const zip = createZip(entries);
-fs.writeFileSync(outputFile, zip);
+if (fs.existsSync(outputFile)) {
+  fs.rmSync(outputFile, { force: true });
+}
 
-const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-console.log(`Release ready: build.zip (${pkg.name} v${pkg.version})`);
+fs.writeFileSync(outputFile, createZip(entries));
+
+console.log(`Release ready: build.zip (${runtimePackage.name} v${runtimePackage.version})`);
 console.log('Included:');
 for (const entry of entries) console.log(`  - ${entry.name}`);

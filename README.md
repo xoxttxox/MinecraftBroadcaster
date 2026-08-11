@@ -72,6 +72,9 @@ Create the complete distributable `build.zip`:
 npm run build:full
 ```
 
+`build.zip` contains a production-only `package.json` and matching lockfile.
+Development scripts, `devDependencies`, `src/`, caches, logs and the real `config.yml` are not included.
+
 Run the compiled build:
 
 ```bash
