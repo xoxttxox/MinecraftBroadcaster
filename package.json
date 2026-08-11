@@ -2,13 +2,14 @@
   "name": "minecraft-broadcaster",
   "version": "1.0.1",
   "description": "Standalone Minecraft Bedrock / Xbox Broadcaster in Node.js and TypeScript",
-  "main": "dist/main.js",
+  "main": "build/main.js",
   "scripts": {
-    "clean": "rimraf dist",
-    "build": "rimraf dist && esbuild src/main.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/main.js --packages=external",
+    "clean": "rimraf build build.zip",
+    "build": "rimraf build && esbuild src/main.ts --bundle --platform=node --target=node20 --format=cjs --outfile=build/main.js --packages=external",
     "typecheck": "tsc --noEmit",
     "start": "tsx src/main.ts",
-    "start:js": "node dist/main.js"
+    "start:js": "node build/main.js",
+    "build:full": "npm run build && node scripts/build-release.mjs"
   },
   "engines": {
     "node": ">=20"

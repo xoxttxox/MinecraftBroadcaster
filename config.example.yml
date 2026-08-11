@@ -4,7 +4,7 @@
 #
 # Einrichtung:
 #   1. Diese Datei nach config.yml kopieren (im gleichen Ordner wie package.json /
-#      dem Arbeitsverzeichnis von `npm run start` / `node dist/main.js`).
+#      dem Arbeitsverzeichnis von `npm run start` / `node build/main.js`).
 #   2. Werte unten anpassen — insbesondere session.sessionInfo (IP/Port),
 #      bedrockVersion und auth.
 #   3. Ohne config.yml legt das Programm beim ersten Start eine Standard-config.yml
@@ -12,9 +12,10 @@
 #
 # Befehle / Start (Node):
 #   npm ci              Abhängigkeiten installieren
-#   npm run build       dist/main.js erzeugen (esbuild)
+#   npm run build       build/main.js erzeugen (esbuild)
+#   npm run build:full  build/main.js + build.zip als Release-Paket erzeugen
 #   npm start           Entwicklung: tsx src/main.ts
-#   npm run start:js    Produktion: node dist/main.js
+#   npm run start:js    Produktion: node build/main.js
 #   npm run typecheck   Nur TypeScript prüfen (ohne Ausgabe)
 #
 # Ordner (automatisch):

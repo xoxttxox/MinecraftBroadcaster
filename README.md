@@ -66,6 +66,12 @@ Create a production build:
 npm run build
 ```
 
+Create the complete distributable `build.zip`:
+
+```bash
+npm run build:full
+```
+
 Run the compiled build:
 
 ```bash
@@ -97,8 +103,9 @@ Then start the application again.
 | Script              | Description                      |
 | ------------------- | -------------------------------- |
 | `npm start`         | Starts `src/main.ts` using `tsx` |
-| `npm run build`     | Creates `dist/main.js`           |
-| `npm run start:js`  | Runs the compiled build          |
+| `npm run build`     | Creates `build/main.js`          |
+| `npm run build:full`| Creates `build/main.js` + `build.zip` |
+| `npm run start:js`  | Runs the compiled build           |
 | `npm run typecheck` | Runs TypeScript type checking    |
 
 ## Project Structure
